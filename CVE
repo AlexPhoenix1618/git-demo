@@ -1,0 +1,59 @@
+The injection through the news title.
+The source will be inserted in the DB, then it will be passed from the DB to the view.
+
+In file cms-master\application\controllers\news_api.php
+
+public function insert_news(){
+$this->load->model('news_model');
+$data = array(
+		//接收新闻的标题 用$this->input->post方法替换$_POST方法更好
+		'title' => $this->input->get('title'),
+		//接收新闻的内容
+		'text' => $this->input->get('text'),
+		//接收所选的频道
+		'channel_id' => 6,
+		//接收图片的地址
+		//'image' => $this->input->post('image'),
+		//根据所选的频道id查看频道的具体名字
+		'channel_name' => "推荐",
+	);
+$this->news_model->add_data($data);
+}
+    public function add_data($data)
+    {
+    		$this->load->database();
+        	$this->db->insert('news', $data);
+    }
+Then, In file cms-master\application\controllers\news.php
+
+	public function show()
+	{
+		$this->load->helper('url');
+		$this->load->model('news_model');
+		$this->load->model('channel_model');
+		//获取id和channel的对应关系表
+		$data['channels'] = $this->channel_model->show_data();
+		//从数据库新获取渲染到列表
+		$data['news'] = $this->news_model->show_data();
+		//将拿回来的图片字符串转化为数组的形式方便视图渲染
+		$i = 0;
+		foreach($data['news'] as $item){
+			$data['news'][$i]['image'] = explode(",",$item['image']);
+			$i++;
+		}
+		//显示退出登陆的页面
+		//$this->load->view ('login/logout');
+		$this->load->view('news/news_show', $data);
+	}
+    public function show_data()
+    {
+    		$this->load->database();
+        $query = $this->db->get("news");
+        return $query->result_array();
+    }
+Finally, in the view file cms-master\application\views\news\news_show.php
+
+<?php 
+foreach ($news as $item): ?>
+//..
+<h4 class="weui-media-box__title"><?php echo $item['title'];?></h4>
